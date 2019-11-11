@@ -68,8 +68,8 @@ function extractData(request, $) {
     } else if (request.userData.label === 'parentalguide') {
         const itemList = $('#certificates .ipl-inline-list__item a');
         const certificates = [];
-        for (const item of itemList) {
-            const $item = $(item);
+        for (let index = 0; index < itemList.length; index++) {
+            const $item = $(itemList[index]);
             certificates.push($item.text().trim());
         }
 
@@ -105,7 +105,7 @@ Apify.main(async () => {
 
     for (const request of input.startUrls) {
         const startUrl = request.url;
-        
+
         if (startUrl.includes('https://www.imdb.com/')) {
             const movieDetailMatch = startUrl.match(/https:\/\/www.imdb.com\/title\/(\w{9})/);
             if (movieDetailMatch  !== null) {

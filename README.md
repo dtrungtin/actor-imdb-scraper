@@ -11,7 +11,7 @@ IMDB Scraper is an [Apify actor](https://apify.com/actors) for extracting data a
 
 | Field | Type | Description | Default value
 | ----- | ---- | ----------- | -------------|
-| startUrls | array | List of [Request](https://sdk.apify.com/docs/api/request#docsNav) objects that will be deeply crawled. The URL can be top level like `https://www.imdb.com/search/title/`, any category or detail URL. Not support `https://www.imdb.com/find` yet. | `[{ "url": "https://www.imdb.com/search/title/" }]`|
+| startUrls | array | List of [Request](https://sdk.apify.com/docs/api/request#docsNav) objects that will be deeply crawled. The URL can be top level like `https://www.imdb.com/search/title/` or detail URL `https://www.imdb.com/title/tt7286456`. Not support `https://www.imdb.com/find` yet. | `[{ "url": "https://www.imdb.com/search/title/" }]`|
 | maxItems | number | Maximum number of actor pages that will be scraped | all found |
 | extendOutputFunction | string | Function that takes a Cheerio handle ($) as argument and returns data that will be merged with the result output. More information in [Extend output function](#extend-output-function) | |
 | proxyConfiguration | object | Proxy settings of the run. If you have access to Apify proxy, leave the default settings. If not, you can set `{ "useApifyProxy": false" }` to disable proxy usage | `{ "useApifyProxy": true }`|

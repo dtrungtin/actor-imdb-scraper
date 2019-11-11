@@ -87,10 +87,6 @@ Apify.events.on('migrating', async () => {
     await Apify.setValue('detailsEnqueued', detailsEnqueued);
 });
 
-setInterval(async () => {
-    console.log(detailsEnqueued);
-}, 20 * 1000);
-
 Apify.main(async () => {
     const input = await Apify.getInput();
     console.log('Input:');
@@ -120,7 +116,6 @@ Apify.main(async () => {
     }
 
     function checkLimit() {
-        console.log(`${input.maxItems} == ${detailsEnqueued}`);
         return input.maxItems && detailsEnqueued >= input.maxItems;
     }
 

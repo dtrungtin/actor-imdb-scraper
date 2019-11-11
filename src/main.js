@@ -7,7 +7,7 @@ function toArrayString(str) {
         .join(', ');
 }
 
-const isObject = (val) => typeof val === 'object' && val !== null && !Array.isArray(val);
+const isObject = val => typeof val === 'object' && val !== null && !Array.isArray(val);
 
 function extractData(request, $) {
     if (request.userData.label === 'item') {
@@ -67,7 +67,9 @@ function extractData(request, $) {
             url: request.url,
             '#debug': Apify.utils.createRequestDebugInfo(request),
         };
-    } else if (request.userData.label === 'parentalguide') {
+    }
+
+    if (request.userData.label === 'parentalguide') {
         const itemList = $('#certificates .ipl-inline-list__item a');
         const certificates = [];
         for (let index = 0; index < itemList.length; index++) {
@@ -100,22 +102,30 @@ Apify.main(async () => {
         }
     }
 
-    const dataset = await Apify.openDataset();
-    const { itemCount } = await dataset.getInfo();
-    let pagesOutputted = itemCount;
     const requestQueue = await Apify.openRequestQueue();
+    let detailsEnqueued = 0;
+
+    function checkLimit() {
+        return input.maxItems && detailsEnqueued >= input.maxItems;
+    }
 
     for (const request of input.startUrls) {
         const startUrl = request.url;
 
+        if (checkLimit()) {
+            break;
+        }
+
         if (startUrl.includes('https://www.imdb.com/')) {
             const movieDetailMatch = startUrl.match(/https:\/\/www.imdb.com\/title\/(\w{9})/);
-            if (movieDetailMatch  !== null) {
+            if (movieDetailMatch !== null) {
                 const itemId = movieDetailMatch[1];
                 const itemUrl = `https://www.imdb.com/title/${itemId}/parentalguide`;
 
                 await requestQueue.addRequest({ url: `${itemUrl}`, userData: { label: 'parentalguide', id: itemId } },
                     { forefront: true });
+
+                detailsEnqueued++;
             } else {
                 await requestQueue.addRequest({ url: startUrl, userData: { label: 'start' } });
             }
@@ -142,6 +152,10 @@ Apify.main(async () => {
                     const pageCount = Math.floor(parseInt(content, 10) / 50); // Each page has 50 items
 
                     for (let index = 1; index < pageCount; index++) {
+                        if (checkLimit()) {
+                            break;
+                        }
+
                         const startNumber = index * 50 + 1;
                         let startUrl = request.url;
                         startUrl += `${startUrl.split('?')[1] ? '&' : '?'}start=${startNumber}`;
@@ -151,6 +165,10 @@ Apify.main(async () => {
 
                 const itemLinks = $('.lister-list .lister-item a');
                 for (let index = 0; index < itemLinks.length; index++) {
+                    if (checkLimit()) {
+                        break;
+                    }
+
                     const href = $(itemLinks[index]).attr('href');
 
                     if (href.includes('/title/')) {
@@ -159,6 +177,8 @@ Apify.main(async () => {
 
                         await requestQueue.addRequest({ url: `${itemUrl}`, userData: { label: 'parentalguide', id: itemId } },
                             { forefront: true });
+
+                        detailsEnqueued++;
                     }
                 }
             } else if (request.userData.label === 'parentalguide') {
@@ -183,12 +203,6 @@ Apify.main(async () => {
                 }
 
                 await Apify.pushData(pageResult);
-
-                if (input.maxItems && ++pagesOutputted >= input.maxItems) {
-                    const msg = `Outputted ${pagesOutputted} pages, limit is ${input.maxItems} pages`;
-                    console.log(`Shutting down the crawler: ${msg}`);
-                    autoscaledPool.abort();
-                }
             }
         },
 

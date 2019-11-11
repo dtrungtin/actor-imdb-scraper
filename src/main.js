@@ -153,7 +153,7 @@ Apify.main(async () => {
         handleRequestTimeoutSecs: 120,
         requestTimeoutSecs: 120,
         handlePageTimeoutSecs: 240,
-        maxConcurrency: 1,
+        maxConcurrency: 5,
 
         handlePageFunction: async ({ request, $ }) => {
             if (request.userData.label === 'start') {
@@ -162,7 +162,7 @@ Apify.main(async () => {
                     return;
                 }
 
-                const itemLinks = $('.lister-list .lister-item a[href*="/title/"]');
+                const itemLinks = $('.lister-list .lister-item-header a[href*="/title/"]');
                 for (let index = 0; index < itemLinks.length; index++) {
                     if (checkLimit()) {
                         return;
@@ -191,7 +191,7 @@ Apify.main(async () => {
                     }
                 }
             } else if (request.userData.label === 'list') {
-                const itemLinks = $('.lister-list .lister-item a[href*="/title/"]');
+                const itemLinks = $('.lister-list .lister-item-header a[href*="/title/"]');
                 for (let index = 0; index < itemLinks.length; index++) {
                     if (checkLimit()) {
                         return;

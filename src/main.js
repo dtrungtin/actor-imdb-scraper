@@ -103,7 +103,9 @@ Apify.main(async () => {
     let pagesOutputted = itemCount;
     const requestQueue = await Apify.openRequestQueue();
 
-    for (const startUrl of input.startUrls) {
+    for (const request of input.startUrls) {
+        const startUrl = request.url;
+        
         if (startUrl.includes('https://www.imdb.com/')) {
             const movieDetailMatch = startUrl.match(/https:\/\/www.imdb.com\/title\/(\w{9})/);
             if (movieDetailMatch  !== null) {

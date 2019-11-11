@@ -122,6 +122,12 @@ Apify.main(async () => {
 
     const crawler = new Apify.CheerioCrawler({
         requestQueue,
+
+        handleRequestTimeoutSecs: 120,
+        requestTimeoutSecs: 120,
+        handlePageTimeoutSecs: 240,
+        maxConcurrency: 5,
+
         handlePageFunction: async ({ request, autoscaledPool, $ }) => {
             if (request.userData.label === 'start' || request.userData.label === 'list') {
                 const paginationEle = $('.desc span');
@@ -144,7 +150,7 @@ Apify.main(async () => {
                 const itemLinks = $('.lister-list .lister-item a');
                 for (let index = 0; index < itemLinks.length; index++) {
                     const href = $(itemLinks[index]).attr('href');
-                    
+
                     if (href.includes('/title/')) {
                         const itemId = href.match(/\/title\/(\w{9})/)[1];
                         const itemUrl = `https://www.imdb.com/title/${itemId}/parentalguide`;

@@ -156,36 +156,29 @@ Apify.main(async () => {
         maxConcurrency: 1,
 
         handlePageFunction: async ({ request, $ }) => {
-            if (request.userData.label === 'start' || request.userData.label === 'list') {
+            if (request.userData.label === 'start') {
                 const paginationEle = $('.desc span');
                 if (!paginationEle || paginationEle.text() === '') {
                     return;
                 }
 
-                const itemLinks = $('.lister-list .lister-item a');
+                const itemLinks = $('.lister-list .lister-item a[href*="/title/"]');
                 for (let index = 0; index < itemLinks.length; index++) {
                     if (checkLimit()) {
                         return;
                     }
 
                     const href = $(itemLinks[index]).attr('href');
+                    const itemId = href.match(/\/title\/(\w{9})/)[1];
+                    const itemUrl = `https://www.imdb.com/title/${itemId}/parentalguide`;
 
-                    if (href.includes('/title/')) {
-                        const itemId = href.match(/\/title\/(\w{9})/)[1];
-                        const itemUrl = `https://www.imdb.com/title/${itemId}/parentalguide`;
+                    await requestQueue.addRequest({ url: `${itemUrl}`, userData: { label: 'parentalguide', id: itemId } },
+                        { forefront: true });
 
-                        await requestQueue.addRequest({ url: `${itemUrl}`, userData: { label: 'parentalguide', id: itemId } },
-                            { forefront: true });
-
-                        detailsEnqueued++;
-                    }
+                    detailsEnqueued++;
                 }
 
-                if (checkLimit()) {
-                    return;
-                }
-
-                if (request.userData.label === 'start' && paginationEle.text().includes('of')) {
+                if (paginationEle.text().includes('of')) {
                     const content = paginationEle.text().match(/of\s+(\d+[.,]?\d*[.,]?\d*)/)[1];
                     const pageCount = Math.floor(parseInt(content, 10) / 50); // Each page has 50 items
 
@@ -197,17 +190,31 @@ Apify.main(async () => {
                         await requestQueue.addRequest({ url: startUrl, userData: { label: 'list', current: index, total: pageCount } });
                     }
                 }
-
-                if (request.userData.label === 'list') {
-                    const index = request.userData.current + 1;
-                    const pageCount = request.userData.total;
-
-                    if (index < pageCount) {
-                        const startNumber = index * 50 + 1;
-                        let startUrl = request.url;
-                        startUrl += `${startUrl.split('?')[1] ? '&' : '?'}start=${startNumber}`;
-                        await requestQueue.addRequest({ url: startUrl, userData: { label: 'list', current: index, total: pageCount } });
+            } else if (request.userData.label === 'list') {
+                const itemLinks = $('.lister-list .lister-item a[href*="/title/"]');
+                for (let index = 0; index < itemLinks.length; index++) {
+                    if (checkLimit()) {
+                        return;
                     }
+
+                    const href = $(itemLinks[index]).attr('href');
+                    const itemId = href.match(/\/title\/(\w{9})/)[1];
+                    const itemUrl = `https://www.imdb.com/title/${itemId}/parentalguide`;
+
+                    await requestQueue.addRequest({ url: `${itemUrl}`, userData: { label: 'parentalguide', id: itemId } },
+                        { forefront: true });
+
+                    detailsEnqueued++;
+                }
+
+                const index = request.userData.current + 1;
+                const pageCount = request.userData.total;
+
+                if (index < pageCount) {
+                    const startNumber = index * 50 + 1;
+                    let startUrl = request.url;
+                    startUrl += `${startUrl.split('?')[1] ? '&' : '?'}start=${startNumber}`;
+                    await requestQueue.addRequest({ url: startUrl, userData: { label: 'list', current: index, total: pageCount } });
                 }
             } else if (request.userData.label === 'parentalguide') {
                 const certificates = extractData(request, $);

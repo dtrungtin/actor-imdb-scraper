@@ -171,6 +171,12 @@ Apify.main(async () => {
 
                 if (extendOutputFunction) {
                     const userResult = await extendOutputFunction($);
+
+                    if (!isObject(userResult)) {
+                        console.log('extendOutputFunction has to return an object!!!');
+                        process.exit(1);
+                    }
+
                     _.extend(pageResult, userResult);
                 }
 

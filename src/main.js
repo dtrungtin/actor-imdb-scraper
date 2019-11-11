@@ -142,9 +142,9 @@ Apify.main(async () => {
                 }
 
                 const itemLinks = $('.lister-list .lister-item a');
-
-                for (const link of itemLinks) {
-                    const href = $(link).attr('href');
+                for (let index = 0; index < itemLinks.length; index++) {
+                    const href = $(itemLinks[index]).attr('href');
+                    
                     if (href.includes('/title/')) {
                         const itemId = href.match(/\/title\/(\w{9})/)[1];
                         const itemUrl = `https://www.imdb.com/title/${itemId}/parentalguide`;

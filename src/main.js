@@ -114,7 +114,7 @@ Apify.main(async () => {
 
     const requestQueue = await Apify.openRequestQueue();
 
-    detailsEnqueued = Apify.getValue('detailsEnqueued');
+    detailsEnqueued = await Apify.getValue('detailsEnqueued');
     if (!detailsEnqueued) {
         detailsEnqueued = 0;
     }

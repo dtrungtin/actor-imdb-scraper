@@ -81,6 +81,12 @@ function extractData(request, $) {
     }
 }
 
+let detailsEnqueued = 0;
+
+Apify.events.on('migrating', async () => {
+    await Apify.setValue('detailsEnqueued', detailsEnqueued);
+});
+
 Apify.main(async () => {
     const input = await Apify.getInput();
     console.log('Input:');
@@ -103,7 +109,11 @@ Apify.main(async () => {
     }
 
     const requestQueue = await Apify.openRequestQueue();
-    let detailsEnqueued = 0;
+
+    detailsEnqueued = Apify.getValue('detailsEnqueued');
+    if (!detailsEnqueued) {
+        detailsEnqueued = 0;
+    }
 
     function checkLimit() {
         return input.maxItems && detailsEnqueued >= input.maxItems;

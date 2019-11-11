@@ -89,7 +89,7 @@ Apify.events.on('migrating', async () => {
 
 setInterval(async () => {
     console.log(detailsEnqueued);
-}, 20 * 1000)
+}, 20 * 1000);
 
 Apify.main(async () => {
     const input = await Apify.getInput();
@@ -120,7 +120,7 @@ Apify.main(async () => {
     }
 
     function checkLimit() {
-        console.log(input.maxItems + ' == ' + detailsEnqueued);
+        console.log(`${input.maxItems} == ${detailsEnqueued}`);
         return input.maxItems && detailsEnqueued >= input.maxItems;
     }
 
@@ -155,27 +155,11 @@ Apify.main(async () => {
         handlePageTimeoutSecs: 240,
         maxConcurrency: 5,
 
-        handlePageFunction: async ({ request, autoscaledPool, $ }) => {
+        handlePageFunction: async ({ request, $ }) => {
             if (request.userData.label === 'start' || request.userData.label === 'list') {
                 const paginationEle = $('.desc span');
                 if (!paginationEle || paginationEle.text() === '') {
                     return;
-                }
-
-                if (request.userData.label === 'start' && paginationEle.text().includes('of')) {
-                    const content = paginationEle.text().match(/of\s+(\d+[.,]?\d*[.,]?\d*)/)[1];
-                    const pageCount = Math.floor(parseInt(content, 10) / 50); // Each page has 50 items
-
-                    for (let index = 1; index < pageCount; index++) {
-                        if (checkLimit()) {
-                            break;
-                        }
-
-                        const startNumber = index * 50 + 1;
-                        let startUrl = request.url;
-                        startUrl += `${startUrl.split('?')[1] ? '&' : '?'}start=${startNumber}`;
-                        await requestQueue.addRequest({ url: startUrl, userData: { label: 'list' } });
-                    }
                 }
 
                 const itemLinks = $('.lister-list .lister-item a');
@@ -194,6 +178,39 @@ Apify.main(async () => {
                             { forefront: true });
 
                         detailsEnqueued++;
+                    }
+                }
+
+                if (checkLimit()) {
+                    return;
+                }
+
+                if (request.userData.label === 'start' && paginationEle.text().includes('of')) {
+                    const content = paginationEle.text().match(/of\s+(\d+[.,]?\d*[.,]?\d*)/)[1];
+                    const pageCount = Math.floor(parseInt(content, 10) / 50); // Each page has 50 items
+
+                    if (pageCount > 0) {
+                        if (checkLimit()) {
+                            return;
+                        }
+
+                        const index = 1;
+                        const startNumber = index * 50 + 1;
+                        let startUrl = request.url;
+                        startUrl += `${startUrl.split('?')[1] ? '&' : '?'}start=${startNumber}`;
+                        await requestQueue.addRequest({ url: startUrl, userData: { label: 'list', current: index, total: pageCount } });
+                    }
+                }
+
+                if (request.userData.label === 'list') {
+                    const index = request.userData.current + 1;
+                    const pageCount = request.userData.total;
+
+                    if (index < pageCount) {
+                        const startNumber = index * 50 + 1;
+                        let startUrl = request.url;
+                        startUrl += `${startUrl.split('?')[1] ? '&' : '?'}start=${startNumber}`;
+                        await requestQueue.addRequest({ url: startUrl, userData: { label: 'list', current: index, total: pageCount } });
                     }
                 }
             } else if (request.userData.label === 'parentalguide') {

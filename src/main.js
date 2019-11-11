@@ -153,7 +153,7 @@ Apify.main(async () => {
         handleRequestTimeoutSecs: 120,
         requestTimeoutSecs: 120,
         handlePageTimeoutSecs: 240,
-        maxConcurrency: 5,
+        maxConcurrency: 1,
 
         handlePageFunction: async ({ request, $ }) => {
             if (request.userData.label === 'start' || request.userData.label === 'list') {
@@ -165,7 +165,7 @@ Apify.main(async () => {
                 const itemLinks = $('.lister-list .lister-item a');
                 for (let index = 0; index < itemLinks.length; index++) {
                     if (checkLimit()) {
-                        break;
+                        return;
                     }
 
                     const href = $(itemLinks[index]).attr('href');
@@ -190,10 +190,6 @@ Apify.main(async () => {
                     const pageCount = Math.floor(parseInt(content, 10) / 50); // Each page has 50 items
 
                     if (pageCount > 0) {
-                        if (checkLimit()) {
-                            return;
-                        }
-
                         const index = 1;
                         const startNumber = index * 50 + 1;
                         let startUrl = request.url;

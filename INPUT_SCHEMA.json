@@ -1,5 +1,5 @@
 {
-    "title": "Input schema for Actor Indeed Scraper",
+    "title": "Input schema for Actor IMDB Scraper",
     "type": "object",
     "schemaVersion": 1,
     "properties": {

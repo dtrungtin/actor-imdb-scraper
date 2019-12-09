@@ -25,7 +25,7 @@ function extractData(request, $) {
         const itemRatingCount = $('span[itemprop=ratingCount]').text().trim()
             .split(',')
             .join('');
-        const desc = $('meta[name=description]').attr('content');
+        const desc = $("#titleStoryLine h2:contains(Storyline)").next().text().trim();
         const itemStars = $('h4:contains(Star:),h4:contains(Stars:)').parent().text()
             .replace('Star:', '')
             .replace('Stars:', '')

@@ -25,7 +25,15 @@ function extractData(request, $) {
         const itemRatingCount = $('span[itemprop=ratingCount]').text().trim()
             .split(',')
             .join('');
-        const desc = $("#titleStoryLine h2:contains(Storyline)").next().text().trim();
+        let desc = $('.summary_text').clone().children().remove()
+            .end()
+            .text()
+            .trim()
+            .replace('»', '')
+            .trim();
+        if (desc.endWidth('...')) {
+            desc = $("#titleStoryLine h2:contains(Storyline)").next().text().trim();
+        }
         const itemStars = $('h4:contains(Star:),h4:contains(Stars:)').parent().text()
             .replace('Star:', '')
             .replace('Stars:', '')

@@ -31,7 +31,7 @@ function extractData(request, $) {
             .trim()
             .replace('»', '')
             .trim();
-        if (desc.endWidth('...')) {
+        if (desc.endsWith('...')) {
             desc = $("#titleStoryLine h2:contains(Storyline)").next().text().trim();
         }
         const itemStars = $('h4:contains(Star:),h4:contains(Stars:)').parent().text()

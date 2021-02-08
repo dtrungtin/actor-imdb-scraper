@@ -33,7 +33,7 @@ function extractData(request, $) {
             .trim();
         if (desc.endsWith('...')) {
             desc = $("#titleStoryLine h2:contains(Storyline)").next().text().trim();
-        } 
+        }
         const itemStars = $('h4:contains(Star:),h4:contains(Stars:)').parent().text()
             .replace('Star:', '')
             .replace('Stars:', '')
@@ -122,7 +122,19 @@ Apify.main(async () => {
         return input.maxItems && detailsEnqueued >= input.maxItems;
     }
 
-    for (const request of input.startUrls) {
+    const startUrls = await (async () => {
+        const urls = [];
+        const rl = await Apify.openRequestList('STARTURLS', input.startUrls);
+        let req;
+
+        while (req = await rl.fetchNextRequest()) { // eslint-disable-line no-cond-assign
+            urls.push(req);
+        }
+
+        return urls;
+    })();
+
+    for (const request of startUrls) {
         const startUrl = request.url;
 
         if (checkLimit()) {
@@ -168,7 +180,7 @@ Apify.main(async () => {
 
                     const href = $(itemLinks[index]).attr('href');
                     const itemId = href.match(/\/title\/(\w{9,10})/)[1];
-                    
+
                     const itemUrl = `https://www.imdb.com/title/${itemId}/parentalguide`;
 
                     await requestQueue.addRequest({ url: `${itemUrl}`, userData: { label: 'parentalguide', id: itemId } },

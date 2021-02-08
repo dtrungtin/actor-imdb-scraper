@@ -33,7 +33,7 @@ function extractData(request, $) {
             .trim();
         if (desc.endsWith('...')) {
             desc = $("#titleStoryLine h2:contains(Storyline)").next().text().trim();
-        }
+        } 
         const itemStars = $('h4:contains(Star:),h4:contains(Stars:)').parent().text()
             .replace('Star:', '')
             .replace('Stars:', '')
@@ -130,7 +130,7 @@ Apify.main(async () => {
         }
 
         if (startUrl.includes('https://www.imdb.com/')) {
-            const movieDetailMatch = startUrl.match(/https:\/\/www.imdb.com\/title\/(\w{9})/);
+            const movieDetailMatch = startUrl.match(/https:\/\/www.imdb.com\/title\/(\w{9,10})/);
             if (movieDetailMatch !== null) {
                 const itemId = movieDetailMatch[1];
                 const itemUrl = `https://www.imdb.com/title/${itemId}/parentalguide`;
@@ -167,7 +167,8 @@ Apify.main(async () => {
                     }
 
                     const href = $(itemLinks[index]).attr('href');
-                    const itemId = href.match(/\/title\/(\w{9})/)[1];
+                    const itemId = href.match(/\/title\/(\w{9,10})/)[1];
+                    
                     const itemUrl = `https://www.imdb.com/title/${itemId}/parentalguide`;
 
                     await requestQueue.addRequest({ url: `${itemUrl}`, userData: { label: 'parentalguide', id: itemId } },
@@ -196,7 +197,7 @@ Apify.main(async () => {
                     }
 
                     const href = $(itemLinks[index]).attr('href');
-                    const itemId = href.match(/\/title\/(\w{9})/)[1];
+                    const itemId = href.match(/\/title\/(\w{9,10})/)[1];
                     const itemUrl = `https://www.imdb.com/title/${itemId}/parentalguide`;
 
                     await requestQueue.addRequest({ url: `${itemUrl}`, userData: { label: 'parentalguide', id: itemId } },

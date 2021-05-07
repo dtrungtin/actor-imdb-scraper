@@ -32,7 +32,7 @@ function extractData(request, $) {
             .replace('»', '')
             .trim();
         if (desc.endsWith('...')) {
-            desc = $("#titleStoryLine h2:contains(Storyline)").next().text().trim();
+            desc = $('#titleStoryLine h2:contains(Storyline)').next().text().trim();
         }
         const itemStars = $('h4:contains(Star:),h4:contains(Stars:)').parent().text()
             .replace('Star:', '')
@@ -191,7 +191,7 @@ Apify.main(async () => {
 
                 if (paginationEle.text().includes('of')) {
                     const content = paginationEle.text().match(/of\s+(\d+[.,]?\d*[.,]?\d*)/)[1];
-                    const pageCount = Math.floor(parseInt(content, 10) / 50); // Each page has 50 items
+                    const pageCount = Math.floor(parseInt(content.replace(/,/g, ''), 10) / 50); // Each page has 50 items
 
                     if (pageCount > 0) {
                         const index = 1;

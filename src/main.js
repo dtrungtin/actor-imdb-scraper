@@ -1,6 +1,6 @@
 const Apify = require('apify');
-const _ = require('underscore');
-const safeEval = require('safe-eval');
+
+const { log } = Apify.utils;
 
 function toArrayString(str) {
     return str.split('\n').join('').split('|').map(Function.prototype.call, String.prototype.trim)
@@ -102,7 +102,7 @@ Apify.main(async () => {
     let extendOutputFunction;
     if (typeof input.extendOutputFunction === 'string' && input.extendOutputFunction.trim() !== '') {
         try {
-            extendOutputFunction = safeEval(input.extendOutputFunction);
+            extendOutputFunction = eval(input.extendOutputFunction); // eslint-disable-line no-eval
         } catch (e) {
             throw new Error(`'extendOutputFunction' is not valid Javascript! Error: ${e}`);
         }
@@ -157,6 +157,8 @@ Apify.main(async () => {
         }
     }
 
+    const proxyConfiguration = await Apify.createProxyConfiguration({ ...input.proxyConfiguration });
+
     const crawler = new Apify.CheerioCrawler({
         requestQueue,
 
@@ -164,6 +166,7 @@ Apify.main(async () => {
         requestTimeoutSecs: 120,
         handlePageTimeoutSecs: 240,
         maxConcurrency: 5,
+        proxyConfiguration,
 
         handlePageFunction: async ({ request, $ }) => {
             if (request.userData.label === 'start') {
@@ -171,6 +174,8 @@ Apify.main(async () => {
                 if (!paginationEle || paginationEle.text() === '') {
                     return;
                 }
+
+                log.info(paginationEle.eq(0).text());
 
                 const itemLinks = $('.lister-list .lister-item-header a[href*="/title/"]');
                 for (let index = 0; index < itemLinks.length; index++) {
@@ -189,7 +194,7 @@ Apify.main(async () => {
                     detailsEnqueued++;
                 }
 
-                if (paginationEle.text().includes('of')) {
+                if (paginationEle.eq(0).text().includes('of')) {
                     const content = paginationEle.text().match(/of\s+(\d+[.,]?\d*[.,]?\d*)/)[1];
                     const pageCount = Math.floor(parseInt(content.replace(/,/g, ''), 10) / 50); // Each page has 50 items
 
@@ -236,19 +241,18 @@ Apify.main(async () => {
                     { forefront: true });
             } else if (request.userData.label === 'item') {
                 const pageResult = extractData(request, $);
+                let userResult = {};
 
                 if (extendOutputFunction) {
-                    const userResult = await extendOutputFunction($);
+                    userResult = await extendOutputFunction($);
 
                     if (!isObject(userResult)) {
                         console.log('extendOutputFunction has to return an object!!!');
                         process.exit(1);
                     }
-
-                    _.extend(pageResult, userResult);
                 }
 
-                await Apify.pushData(pageResult);
+                await Apify.pushData({ ...pageResult, ...userResult });
             }
         },
 
@@ -258,8 +262,6 @@ Apify.main(async () => {
                 '#debug': Apify.utils.createRequestDebugInfo(request),
             });
         },
-
-        ...input.proxyConfiguration,
     });
 
     await crawler.run();

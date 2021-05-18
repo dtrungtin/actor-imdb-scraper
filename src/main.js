@@ -19,8 +19,10 @@ function extractData(request, $) {
         const itemRuntime = $('h4:contains(Runtime:)').parent().text()
             .replace('Runtime:', '')
             .split('min')[0].trim();
-        const yearMatch = itemTitle.match(/(\d+)/);
-        const itemYear = yearMatch ? yearMatch[0] : '';
+        const yearMatch = itemTitle.match(/[(](\d{4})[)]/);
+        const parts = $('.subtext [href*=releaseinfo]').text().match(/\d{4}/);
+        // eslint-disable-next-line no-nested-ternary
+        const itemYear = yearMatch ? yearMatch[1] : (parts ? parts[0] : '');
         const itemRating = $('.ratingValue').text().trim().split('/')[0];
         const itemRatingCount = $('span[itemprop=ratingCount]').text().trim()
             .split(',')

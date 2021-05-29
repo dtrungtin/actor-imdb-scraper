@@ -163,7 +163,7 @@ Apify.main(async () => {
         }
     }
 
-    const proxyConfiguration = await Apify.createProxyConfiguration({ ...input.proxyConfiguration });
+    const proxyConfiguration = await Apify.createProxyConfiguration({ ...input.proxyConfiguration, countryCode: 'US' });
 
     const crawler = new Apify.CheerioCrawler({
         requestQueue,
@@ -173,6 +173,8 @@ Apify.main(async () => {
         handlePageTimeoutSecs: 240,
         maxConcurrency: 5,
         proxyConfiguration,
+        useSessionPool: true,
+        persistCookiesPerSession: true,
 
         handlePageFunction: async ({ request, $ }) => {
             if (request.userData.label === 'start') {

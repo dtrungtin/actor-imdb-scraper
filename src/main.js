@@ -12,10 +12,6 @@ const isObject = val => typeof val === 'object' && val !== null && !Array.isArra
 function extractData(request, $) {
     if (request.userData.label === 'item') {
         const itemTitle = $('.title_wrapper h1').text().trim();
-        if (!itemTitle) {
-            throw new Error('Something wrong! Retrying...');
-        }
-
         const itemOriginalTitle = $('.title_wrapper .originalTitle').clone().children().remove()
             .end()
             .text()
@@ -249,6 +245,10 @@ Apify.main(async () => {
                     { forefront: true });
             } else if (request.userData.label === 'item') {
                 const pageResult = extractData(request, $);
+                if (!pageResult.title) {
+                    return;
+                }
+
                 let userResult = {};
 
                 if (extendOutputFunction) {

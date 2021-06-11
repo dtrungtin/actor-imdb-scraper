@@ -1,3 +1,4 @@
+/* eslint-disable no-nested-ternary */
 const Apify = require('apify');
 
 const { log } = Apify.utils;
@@ -11,20 +12,35 @@ const isObject = val => typeof val === 'object' && val !== null && !Array.isArra
 
 function extractData(request, $) {
     if (request.userData.label === 'item') {
-        const itemTitle = $('.title_wrapper h1').text().trim();
-        const itemOriginalTitle = $('.title_wrapper .originalTitle').clone().children().remove()
+        const itemTitle = $('h1').text().trim();
+        let itemOriginalTitle = $('.title_wrapper .originalTitle').clone().children().remove()
             .end()
             .text()
             .trim();
-        const itemRuntime = $('h4:contains(Runtime:)').parent().text()
+        if (itemOriginalTitle === '') {
+            itemOriginalTitle = $('div[class*=OriginalTitleText]').text().replace('Original title:', '').trim();
+        }
+        let itemRuntime = $('h4:contains(Runtime:)').parent().text()
             .replace('Runtime:', '')
             .split('min')[0].trim();
+
+        if (itemRuntime === '') {
+            itemRuntime = $('span:contains(Runtime)').parent().text()
+                .replace('Runtime', '');
+            const parts = itemRuntime.match(/(\d+)h\s*(\d+)min/);
+            if (parts) {
+                const minuteTotal = parseInt(parts[1], 10) * 60 + parseInt(parts[2], 10);
+                itemRuntime = `${minuteTotal}`;
+            } else {
+                itemRuntime = itemRuntime.split('min')[0].trim();
+            }
+        }
         const yearMatch = itemTitle.match(/[(](\d{4})[)]/);
-        const parts = $('.subtext [href*=releaseinfo]').text().match(/\d{4}/);
-        // eslint-disable-next-line no-nested-ternary
+        const parts = $('[href*=releaseinfo]').text().match(/\d{4}/);
         const itemYear = yearMatch ? yearMatch[1] : (parts ? parts[0] : '');
-        const itemRating = $('.ratingValue').text().trim().split('/')[0];
-        const itemRatingCount = $('span[itemprop=ratingCount]').text().trim()
+
+        const itemRating = $('.ratingValue,span[class*=RatingScore]').text().trim().split('/')[0];
+        const itemRatingCount = $('span[itemprop=ratingCount],div[class*=TotalRatingAmount]').text().trim()
             .split(',')
             .join('');
         let desc = $('.summary_text').clone().children().remove()
@@ -36,21 +52,63 @@ function extractData(request, $) {
         if (desc.endsWith('...')) {
             desc = $('#titleStoryLine h2:contains(Storyline)').next().text().trim();
         }
-        const itemStars = $('h4:contains(Star:),h4:contains(Stars:)').parent().text()
+        if (desc === '') {
+            desc = $('[data-testid=plot] span').eq(0).text().trim();
+        }
+        let itemStars = $('h4:contains(Star:),h4:contains(Stars:)').parent().text()
             .replace('Star:', '')
             .replace('Stars:', '')
             .trim()
             .split('|')[0].trim();
-        const itemDirector = $('h4:contains(Director:),h4:contains(Directors:)').parent().text()
+        if (itemStars === '') {
+            for (let index = 0; index < $('a:contains(Star)').eq(0).parent().find('li').length; index++) {
+                // eslint-disable-next-line newline-per-chained-call
+                const star = $('a:contains(Star)').parent().find('li').eq(index).text();
+                if (index > 0) {
+                    itemStars += ', ';
+                }
+                itemStars += star;
+            }
+        }
+
+        let itemDirector = $('h4:contains(Director:),h4:contains(Directors:)').parent().text()
             .replace('Director:', '')
             .replace('Directors:', '')
             .trim();
-        const itemGenres = toArrayString($('h4:contains(Genres:)').parent().text()
+        if (itemDirector === '') {
+            for (let index = 0; index < $('span:contains(Director)').eq(0).parent().find('li').length; index++) {
+                // eslint-disable-next-line newline-per-chained-call
+                const director = $('span:contains(Director)').parent().find('li').eq(index).text();
+                if (index > 0) {
+                    itemDirector += ', ';
+                }
+                itemDirector += director;
+            }
+        }
+        let itemGenres = toArrayString($('h4:contains(Genres:)').parent().text()
             .replace('Genres:', '')
             .trim());
-        const itemCountry = toArrayString($('h4:contains(Country)').parent().text()
+        if (itemGenres === '') {
+            for (let index = 0; index < $('[data-testid="storyline-genres"] li').length; index++) {
+                const genre = $('[data-testid="storyline-genres"] li').eq(index).text();
+                if (index > 0) {
+                    itemGenres += ', ';
+                }
+                itemGenres += genre;
+            }
+        }
+        let itemCountry = toArrayString($('h4:contains(Country)').parent().text()
             .replace('Country:', '')
             .trim());
+        if (itemCountry === '') {
+            for (let index = 0; index < $('[href*=country_of_origin]').length; index++) {
+                const country = $('[href*=country_of_origin]').eq(index).text();
+                if (index > 0) {
+                    itemCountry += ', ';
+                }
+                itemCountry += country;
+            }
+        }
         const itemCert = $('h4:contains(Certificate:)').parent().text()
             .replace('Certificate:', '')
             .trim()
@@ -58,12 +116,12 @@ function extractData(request, $) {
 
         return {
             title: itemTitle,
-            'original title': itemOriginalTitle,
+            originalTitle: itemOriginalTitle,
             runtime: itemRuntime,
             certificate: (itemCert !== '') ? itemCert : request.userData.certificates,
             year: itemYear,
             rating: itemRating,
-            ratingcount: itemRatingCount,
+            ratingCount: itemRatingCount,
             description: desc,
             stars: itemStars,
             director: itemDirector,
@@ -239,23 +297,19 @@ Apify.main(async () => {
             } else if (request.userData.label === 'parentalguide') {
                 const certificates = extractData(request, $);
                 const itemCertificates = certificates.join(', ');
-                const itemUrl = `https://www.imdb.com/title/${request.userData.id}`;
+                const itemUrl = `https://www.imdb.com/title/${request.userData.id}/`;
 
                 await requestQueue.addRequest({ url: `${itemUrl}`, userData: { label: 'item', certificates: itemCertificates } },
                     { forefront: true });
             } else if (request.userData.label === 'item') {
                 const pageResult = extractData(request, $);
-                if (!pageResult.title) {
-                    return;
-                }
-
                 let userResult = {};
 
                 if (extendOutputFunction) {
                     userResult = await extendOutputFunction($);
 
                     if (!isObject(userResult)) {
-                        console.log('extendOutputFunction has to return an object!!!');
+                        log.info('extendOutputFunction has to return an object!!!');
                         process.exit(1);
                     }
                 }

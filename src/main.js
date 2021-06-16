@@ -245,6 +245,8 @@ Apify.main(async () => {
                 log.info(paginationEle.eq(0).text());
 
                 const itemLinks = $('.lister-list .lister-item-header a[href*="/title/"]:nth-child(2)');
+                log.info(itemLinks.length);
+
                 for (let index = 0; index < itemLinks.length; index++) {
                     if (checkLimit()) {
                         return;
@@ -278,6 +280,8 @@ Apify.main(async () => {
                 log.info(paginationEle.eq(0).text());
 
                 const itemLinks = $('.lister-list .lister-item-header a[href*="/title/"]:nth-child(2)');
+                log.info(itemLinks.length);
+
                 for (let index = 0; index < itemLinks.length; index++) {
                     if (checkLimit()) {
                         return;

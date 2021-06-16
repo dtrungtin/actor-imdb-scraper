@@ -121,12 +121,12 @@ function extractData(request, $) {
 
         return {
             title: itemTitle,
-            originalTitle: itemOriginalTitle,
+            'original title': itemOriginalTitle,
             runtime: itemRuntime,
             certificate: (itemCert !== '') ? itemCert : request.userData.certificates,
             year: itemYear,
             rating: itemRating,
-            ratingCount: itemRatingCount,
+            ratingcount: itemRatingCount,
             description: desc,
             stars: itemStars,
             director: itemDirector,

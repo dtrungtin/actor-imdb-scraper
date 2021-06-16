@@ -300,7 +300,7 @@ Apify.main(async () => {
                 const index = request.userData.current + 1;
                 const pageCount = request.userData.total;
 
-                if (index < pageCount) {
+                if (index <= pageCount) {
                     const startNumber = index * 50 + 1;
                     let startUrl = request.url;
                     startUrl += `${startUrl.split('?')[1] ? '&' : '?'}start=${startNumber}`;

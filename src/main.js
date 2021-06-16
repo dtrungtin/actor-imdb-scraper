@@ -36,7 +36,7 @@ function extractData(request, $) {
             }
         }
         const yearMatch = itemTitle.match(/[(](\d{4})[)]/);
-        const parts = $('[href*=releaseinfo]').text().match(/\d{4}/);
+        let parts = $('[href*=releaseinfo]').text().match(/\d{4}/);
         const itemYear = yearMatch ? yearMatch[1] : (parts ? parts[0] : '');
 
         const itemRating = $('.ratingValue,span[class*=RatingScore]').text().trim().split('/')[0];
@@ -100,6 +100,11 @@ function extractData(request, $) {
         let itemCountry = toArrayString($('h4:contains(Country)').parent().text()
             .replace('Country:', '')
             .trim());
+        if (itemCountry === '') {
+            parts = $('[href*=releaseinfo]').text().match(/\((.+)\)/);
+            itemCountry = parts ? parts[1] : '';
+        }
+
         if (itemCountry === '') {
             for (let index = 0; index < $('[href*=country_of_origin]').length; index++) {
                 const country = $('[href*=country_of_origin]').eq(index).text();
@@ -229,6 +234,9 @@ Apify.main(async () => {
         proxyConfiguration,
         useSessionPool: true,
         persistCookiesPerSession: true,
+        sessionPoolOptions: {
+            maxPoolSize: 5,
+        },
 
         handlePageFunction: async ({ request, $ }) => {
             if (request.userData.label === 'start') {
@@ -264,11 +272,14 @@ Apify.main(async () => {
                         const index = 1;
                         const startNumber = index * 50 + 1;
                         let startUrl = request.url;
-                        startUrl += `${startUrl.split('?')[1] ? '&' : '?'}start=${startNumber}`;
+                        startUrl += `${startUrl.includes('?') ? '&' : '?'}start=${startNumber}`;
                         await requestQueue.addRequest({ url: startUrl, userData: { label: 'list', current: index, total: pageCount } });
                     }
                 }
             } else if (request.userData.label === 'list') {
+                const paginationEle = $('.desc span');
+                log.info(paginationEle.eq(0).text());
+
                 const itemLinks = $('.lister-list .lister-item-header a[href*="/title/"]');
                 for (let index = 0; index < itemLinks.length; index++) {
                     if (checkLimit()) {

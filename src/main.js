@@ -234,9 +234,6 @@ Apify.main(async () => {
         proxyConfiguration,
         useSessionPool: true,
         persistCookiesPerSession: true,
-        sessionPoolOptions: {
-            maxPoolSize: 5,
-        },
 
         handlePageFunction: async ({ request, $ }) => {
             if (request.userData.label === 'start') {
@@ -247,7 +244,7 @@ Apify.main(async () => {
 
                 log.info(paginationEle.eq(0).text());
 
-                const itemLinks = $('.lister-list .lister-item-header a[href*="/title/"]');
+                const itemLinks = $('.lister-list .lister-item-header a[href*="/title/"]:nth-child(2)');
                 for (let index = 0; index < itemLinks.length; index++) {
                     if (checkLimit()) {
                         return;
@@ -280,7 +277,7 @@ Apify.main(async () => {
                 const paginationEle = $('.desc span');
                 log.info(paginationEle.eq(0).text());
 
-                const itemLinks = $('.lister-list .lister-item-header a[href*="/title/"]');
+                const itemLinks = $('.lister-list .lister-item-header a[href*="/title/"]:nth-child(2)');
                 for (let index = 0; index < itemLinks.length; index++) {
                     if (checkLimit()) {
                         return;

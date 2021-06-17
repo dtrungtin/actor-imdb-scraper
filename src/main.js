@@ -150,9 +150,11 @@ function extractData(request, $) {
 }
 
 let detailsEnqueued = 0;
+let detailsTotal = 0;
 
 Apify.events.on('migrating', async () => {
     await Apify.setValue('detailsEnqueued', detailsEnqueued);
+    await Apify.setValue('detailsTotal', detailsTotal);
 });
 
 Apify.main(async () => {
@@ -181,6 +183,11 @@ Apify.main(async () => {
     detailsEnqueued = await Apify.getValue('detailsEnqueued');
     if (!detailsEnqueued) {
         detailsEnqueued = 0;
+    }
+
+    detailsTotal = await Apify.getValue('detailsTotal');
+    if (!detailsTotal) {
+        detailsTotal = 0;
     }
 
     function checkLimit() {
@@ -212,10 +219,13 @@ Apify.main(async () => {
                 const itemId = movieDetailMatch[1];
                 const itemUrl = `https://www.imdb.com/title/${itemId}/parentalguide`;
 
-                await requestQueue.addRequest({ url: `${itemUrl}`, userData: { label: 'parentalguide', id: itemId } },
+                const rq = await requestQueue.addRequest({ url: `${itemUrl}`, userData: { label: 'parentalguide', id: itemId } },
                     { forefront: true });
 
-                detailsEnqueued++;
+                if (!rq.wasAlreadyPresent) {
+                    detailsEnqueued++;
+                }
+                detailsTotal++;
             } else {
                 await requestQueue.addRequest({ url: startUrl, userData: { label: 'start' } });
             }
@@ -259,10 +269,13 @@ Apify.main(async () => {
 
                     const itemUrl = `https://www.imdb.com/title/${itemId}/parentalguide`;
 
-                    await requestQueue.addRequest({ url: `${itemUrl}`, userData: { label: 'parentalguide', id: itemId } },
+                    const rq = await requestQueue.addRequest({ url: `${itemUrl}`, userData: { label: 'parentalguide', id: itemId } },
                         { forefront: true });
 
-                    detailsEnqueued++;
+                    if (!rq.wasAlreadyPresent) {
+                        detailsEnqueued++;
+                    }
+                    detailsTotal++;
                 }
 
                 if (paginationEle.eq(0).text().includes('of')) {
@@ -293,10 +306,13 @@ Apify.main(async () => {
                     const itemId = href.match(/\/title\/(\w{9,10})/)[1];
                     const itemUrl = `https://www.imdb.com/title/${itemId}/parentalguide`;
 
-                    await requestQueue.addRequest({ url: `${itemUrl}`, userData: { label: 'parentalguide', id: itemId } },
+                    const rq = await requestQueue.addRequest({ url: `${itemUrl}`, userData: { label: 'parentalguide', id: itemId } },
                         { forefront: true });
 
-                    detailsEnqueued++;
+                    if (!rq.wasAlreadyPresent) {
+                        detailsEnqueued++;
+                    }
+                    detailsTotal++;
                 }
 
                 const index = request.userData.current + 1;
@@ -340,4 +356,6 @@ Apify.main(async () => {
     });
 
     await crawler.run();
+
+    log.info(`Duplicated titles ${detailsTotal - detailsEnqueued}`);
 });

@@ -304,8 +304,7 @@ Apify.main(async () => {
 
                 if (index <= pageCount) {
                     const startNumber = index * 50 + 1;
-                    let startUrl = request.url;
-                    startUrl += `${startUrl.split('?')[1] ? '&' : '?'}start=${startNumber}`;
+                    const startUrl = request.url.replace(/&start=\d+/, `&start=${startNumber}`);
                     await requestQueue.addRequest({ url: startUrl, userData: { label: 'list', current: index, total: pageCount } });
                 }
             } else if (request.userData.label === 'parentalguide') {

@@ -236,6 +236,8 @@ Apify.main(async () => {
         persistCookiesPerSession: true,
 
         handlePageFunction: async ({ request, $ }) => {
+            log.info(`open url(${request.userData.label}): ${request.url}`);
+
             if (request.userData.label === 'start') {
                 const paginationEle = $('.desc span');
                 if (!paginationEle || paginationEle.text() === '') {

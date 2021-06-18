@@ -39,7 +39,8 @@ function extractData(request, $) {
         let parts = $('[href*=releaseinfo]').text().match(/\d{4}/);
         const itemYear = yearMatch ? yearMatch[1] : (parts ? parts[0] : '');
 
-        const itemRating = $('.ratingValue,span[class*=RatingScore]').text().trim().split('/')[0];
+        const itemRating = $('.ratingValue,span[class*=RatingScore]').eq(0).text().trim()
+            .split('/')[0];
         const itemRatingCount = $('span[itemprop=ratingCount],div[class*=TotalRatingAmount]').text().trim()
             .split(',')
             .join('');
@@ -123,7 +124,7 @@ function extractData(request, $) {
             title: itemTitle,
             'original title': itemOriginalTitle,
             runtime: itemRuntime,
-            certificate: (itemCert !== '') ? itemCert : request.userData.certificates,
+            certificate: (itemCert !== '' && !itemCert.includes('See all')) ? itemCert : request.userData.certificates,
             year: itemYear,
             rating: itemRating,
             ratingcount: itemRatingCount,

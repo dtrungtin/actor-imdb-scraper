@@ -12,7 +12,9 @@ const isObject = val => typeof val === 'object' && val !== null && !Array.isArra
 
 function extractData(request, $) {
     if (request.userData.label === 'item') {
-        const itemTitle = $('h1').text().trim();
+        const itemTitleParent = $('.titleParent a,[data-testid*=series-link]').text().trim();
+        const isEpisode = itemTitleParent !== '';
+        let itemTitle = isEpisode ? `${itemTitleParent} - ${$('h1').text().trim()}` : $('h1').text().trim();
         let itemOriginalTitle = $('.title_wrapper .originalTitle').clone().children().remove()
             .end()
             .text()
@@ -38,6 +40,9 @@ function extractData(request, $) {
         const yearMatch = itemTitle.match(/[(](\d{4})[)]/);
         let parts = $('[href*=releaseinfo]').text().match(/\d{4}/);
         const itemYear = yearMatch ? yearMatch[1] : (parts ? parts[0] : '');
+        if (!yearMatch && itemYear !== '') {
+            itemTitle = `${itemTitle} (${itemYear})`;
+        }
 
         const itemRating = $('.ratingValue,span[class*=RatingScore]').eq(0).text().trim()
             .split('/')[0];
@@ -123,6 +128,7 @@ function extractData(request, $) {
         return {
             title: itemTitle,
             'original title': itemOriginalTitle,
+            isEpisode,
             runtime: itemRuntime,
             certificate: (itemCert !== '' && !itemCert.includes('See all')) ? itemCert : request.userData.certificates,
             year: itemYear,
@@ -151,11 +157,9 @@ function extractData(request, $) {
 }
 
 let detailsEnqueued = 0;
-let detailsTotal = 0;
 
 Apify.events.on('migrating', async () => {
     await Apify.setValue('detailsEnqueued', detailsEnqueued);
-    await Apify.setValue('detailsTotal', detailsTotal);
 });
 
 Apify.main(async () => {
@@ -184,11 +188,6 @@ Apify.main(async () => {
     detailsEnqueued = await Apify.getValue('detailsEnqueued');
     if (!detailsEnqueued) {
         detailsEnqueued = 0;
-    }
-
-    detailsTotal = await Apify.getValue('detailsTotal');
-    if (!detailsTotal) {
-        detailsTotal = 0;
     }
 
     function checkLimit() {
@@ -226,7 +225,6 @@ Apify.main(async () => {
                 if (!rq.wasAlreadyPresent) {
                     detailsEnqueued++;
                 }
-                detailsTotal++;
             } else {
                 await requestQueue.addRequest({ url: startUrl, userData: { label: 'start' } });
             }
@@ -246,7 +244,7 @@ Apify.main(async () => {
         useSessionPool: true,
         persistCookiesPerSession: true,
 
-        handlePageFunction: async ({ request, $ }) => {
+        handlePageFunction: async ({ request, $, body }) => {
             log.info(`open url(${request.userData.label}): ${request.url}`);
 
             if (request.userData.label === 'start') {
@@ -257,26 +255,28 @@ Apify.main(async () => {
 
                 log.info(paginationEle.eq(0).text());
 
-                const itemLinks = $('.lister-list .lister-item-header a[href*="/title/"]:nth-child(2)');
-                log.info(itemLinks.length);
+                const items = $('.lister-list .lister-item');
+                log.info(items.length);
 
-                for (let index = 0; index < itemLinks.length; index++) {
+                for (let index = 0; index < items.length; index++) {
                     if (checkLimit()) {
                         return;
                     }
 
-                    const href = $(itemLinks[index]).attr('href');
+                    const links = items.eq(index).find('.lister-item-header a[href*="/title/"]');
+                    const isEpisode = links.length > 1;
+                    const itemLink = isEpisode ? links.eq(1) : links.eq(0);
+                    const href = itemLink.attr('href');
                     const itemId = href.match(/\/title\/(\w{9,10})/)[1];
 
                     const itemUrl = `https://www.imdb.com/title/${itemId}/parentalguide`;
 
-                    const rq = await requestQueue.addRequest({ url: `${itemUrl}`, userData: { label: 'parentalguide', id: itemId } },
+                    const rq = await requestQueue.addRequest({ url: `${itemUrl}`, userData: { label: 'parentalguide', id: itemId, isEpisode } },
                         { forefront: true });
 
                     if (!rq.wasAlreadyPresent) {
                         detailsEnqueued++;
                     }
-                    detailsTotal++;
                 }
 
                 if (paginationEle.eq(0).text().includes('of')) {
@@ -295,25 +295,27 @@ Apify.main(async () => {
                 const paginationEle = $('.desc span');
                 log.info(paginationEle.eq(0).text());
 
-                const itemLinks = $('.lister-list .lister-item-header a[href*="/title/"]:nth-child(2)');
-                log.info(itemLinks.length);
+                const items = $('.lister-list .lister-item');
+                log.info(items.length);
 
-                for (let index = 0; index < itemLinks.length; index++) {
+                for (let index = 0; index < items.length; index++) {
                     if (checkLimit()) {
                         return;
                     }
 
-                    const href = $(itemLinks[index]).attr('href');
+                    const links = items.eq(index).find('.lister-item-header a[href*="/title/"]');
+                    const isEpisode = links.length > 1;
+                    const itemLink = isEpisode ? links.eq(1) : links.eq(0);
+                    const href = itemLink.attr('href');
                     const itemId = href.match(/\/title\/(\w{9,10})/)[1];
                     const itemUrl = `https://www.imdb.com/title/${itemId}/parentalguide`;
 
-                    const rq = await requestQueue.addRequest({ url: `${itemUrl}`, userData: { label: 'parentalguide', id: itemId } },
+                    const rq = await requestQueue.addRequest({ url: `${itemUrl}`, userData: { label: 'parentalguide', id: itemId, isEpisode } },
                         { forefront: true });
 
                     if (!rq.wasAlreadyPresent) {
                         detailsEnqueued++;
                     }
-                    detailsTotal++;
                 }
 
                 const index = request.userData.current + 1;
@@ -325,13 +327,15 @@ Apify.main(async () => {
                     await requestQueue.addRequest({ url: startUrl, userData: { label: 'list', current: index, total: pageCount } });
                 }
             } else if (request.userData.label === 'parentalguide') {
+                const { isEpisode } = request.userData;
                 const certificates = extractData(request, $);
                 const itemCertificates = certificates.join(', ');
                 const itemUrl = `https://www.imdb.com/title/${request.userData.id}/`;
 
-                await requestQueue.addRequest({ url: `${itemUrl}`, userData: { label: 'item', certificates: itemCertificates } },
+                await requestQueue.addRequest({ url: `${itemUrl}`, userData: { label: 'item', certificates: itemCertificates, isEpisode } },
                     { forefront: true });
             } else if (request.userData.label === 'item') {
+                await Apify.setValue('body_html', body, { contentType: 'text/html' });
                 const pageResult = extractData(request, $);
                 let userResult = {};
 
@@ -357,6 +361,4 @@ Apify.main(async () => {
     });
 
     await crawler.run();
-
-    log.info(`Duplicated titles ${detailsTotal - detailsEnqueued}`);
 });

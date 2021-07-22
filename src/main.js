@@ -46,7 +46,7 @@ function extractData(request, $) {
 
         const itemRating = $('.ratingValue,span[class*=RatingScore]').eq(0).text().trim()
             .split('/')[0];
-        const itemRatingCount = $('span[itemprop=ratingCount],div[class*=TotalRatingAmount]').text().trim()
+        const itemRatingCount = $('span[itemprop=ratingCount],div[class*=TotalRatingAmount]').eq(0).text().trim()
             .split(',')
             .join('');
         let desc = $('.summary_text').clone().children().remove()

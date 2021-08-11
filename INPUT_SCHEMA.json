@@ -9,7 +9,7 @@
             "editor": "requestListSources",
             "description": "List of URLs that will be scraped or crawled.",
             "prefill": [
-                { "url": "https://www.imdb.com/search/title/?title_type=feature&release_date=2020-01-01,&user_rating=8.0,&countries=us&languages=en" }
+                { "url": "https://www.imdb.com/search/title/?title_type=feature&user_rating=9.5" }
             ]
         },
         "maxItems": {

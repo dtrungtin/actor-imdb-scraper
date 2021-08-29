@@ -262,7 +262,6 @@ Apify.main(async () => {
                     const isEpisode = links.length > 1;
                     const itemLink = links.eq(0);
                     const href = itemLink.attr('href');
-                    console.log(href);
                     const itemId = href.match(/\/title\/(\w{9,10})/)[1];
 
                     const itemUrl = `https://www.imdb.com/title/${itemId}/parentalguide`;

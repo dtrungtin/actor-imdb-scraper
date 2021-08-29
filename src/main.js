@@ -225,6 +225,8 @@ Apify.main(async () => {
                 if (!rq.wasAlreadyPresent) {
                     detailsEnqueued++;
                 }
+            } else if (startUrl.includes('/find?')) {
+                await requestQueue.addRequest({ url: startUrl, userData: { label: 'find' } });
             } else {
                 await requestQueue.addRequest({ url: startUrl, userData: { label: 'start' } });
             }
@@ -247,7 +249,32 @@ Apify.main(async () => {
         handlePageFunction: async ({ request, $, body }) => {
             log.info(`open url(${request.userData.label}): ${request.url}`);
 
-            if (request.userData.label === 'start') {
+            if (request.userData.label === 'find') {
+                const items = $('.findSection:nth-child(3) .findList .findResult');
+                log.info(items.length);
+
+                for (let index = 0; index < items.length; index++) {
+                    if (checkLimit()) {
+                        return;
+                    }
+
+                    const links = items.eq(index).find('.result_text a[href*="/title/"]');
+                    const isEpisode = links.length > 1;
+                    const itemLink = links.eq(0);
+                    const href = itemLink.attr('href');
+                    console.log(href);
+                    const itemId = href.match(/\/title\/(\w{9,10})/)[1];
+
+                    const itemUrl = `https://www.imdb.com/title/${itemId}/parentalguide`;
+
+                    const rq = await requestQueue.addRequest({ url: `${itemUrl}`, userData: { label: 'parentalguide', id: itemId, isEpisode } },
+                        { forefront: true });
+
+                    if (!rq.wasAlreadyPresent) {
+                        detailsEnqueued++;
+                    }
+                }
+            } else if (request.userData.label === 'start') {
                 const paginationEle = $('.desc span');
                 if (!paginationEle || paginationEle.text() === '') {
                     return;

@@ -7,3 +7,6 @@
 - ommiting or randomly adding items fixed
 - no longer returns almost empty datasets
 - year correctly in feature films
+
+#### Improvement
+- support to scrape the "find" url 

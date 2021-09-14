@@ -7,7 +7,7 @@
             "title": "Start URLs",
             "type": "array",
             "editor": "requestListSources",
-            "description": "List of URLs that will be scraped or crawled.",
+            "description": "List of URLs that will be scraped or crawled. Go to https://www.imdb.com/search/title/ and choose filter you want.",
             "prefill": [
                 { "url": "https://www.imdb.com/search/title/?title_type=feature&user_rating=9.5" }
             ]
@@ -16,7 +16,16 @@
             "title": "Max items",
             "type": "integer",
             "minimum": 1,
-            "description": "Limit of detail/product pages to be scraped"
+            "description": "Limit of detail/product pages to be scraped",
+            "prefill": 50
+        },
+        "proxyConfiguration": {
+            "title": "Proxy configuration",
+            "type": "object",
+            "editor": "proxy",
+            "description": "The best option is usually Automatic proxy. But you can also use your own proxies or no proxy",
+            "prefill": { "useApifyProxy": true },
+            "sectionCaption": "Proxy Configuration" 
         },
         "extendOutputFunction": {
             "title": "Extend output function",
@@ -24,14 +33,8 @@
             "nullable": true,
             "description": "Function that takes a JQuery handle ($) as argument and returns data that will be merged with the default output",
             "prefill": "($) => { return {} }",
-            "editor": "javascript"
-        },
-        "proxyConfiguration": {
-            "title": "Proxy configuration",
-            "type": "object",
-            "editor": "proxy",
-            "description": "The best option is usually Automatic proxy. But you can also use your own proxies or no proxy",
-            "prefill": { "useApifyProxy": true }
+            "editor": "javascript",
+            "sectionCaption": "Extend output" 
         }
     },
     "required": ["startUrls"]

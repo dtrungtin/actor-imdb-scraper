@@ -1,24 +1,34 @@
-### IMDB Scraper
+## Features
+Our free IMDb Scraper enables you to extract and download data about movies, video games, TV shows, streaming content, and personalities from [IMDb.com](https://www.imdb.com/).
 
-IMDB Scraper is an [Apify actor](https://apify.com/actors) for extracting data about actors from [IMDB](https://www.imdb.com/search/title/). It allows you to extract all movies/TV shows their information. It is build on top of [Apify SDK](https://sdk.apify.com/) and you can run it both on [Apify platform](https://my.apify.com) and locally.
+## Why scrape IMDb?
+Launched over 30 years ago, IMDb now contains over 8 million titles and over 10 million personalities. It is the most comprehensive film and TV show database in the world.
 
-- [Input](#input)
-- [Output](#output)
-- [Compute units consumption](#compute-units-consumption)
-- [Extend output function](#extend-output-function)
+IMDb datasets are frequently used to train AI models and recommendation systems and several different datasets are freely available to [download](https://www.imdb.com/interfaces/). You should also check out the [IMDb developer page](https://developer.imdb.com/) if you're interested in accessing data products direct from IMDb.
 
-### Input
+However, if your specific use case means that you need to scrape IMDb, our free IMDb Scraper effectively creates an unofficial IMDb API and gives you an alternative way to access live IMDb data direct from the website.
+
+## Tutorial
+Our [Beginner's Guide to Web Scraping](https://apify.com/web-scraping) has a really great explanation of how to get started with web scraping. And if you skip ahead to the section on [Web Scraping with Apify](https://apify.com/web-scraping#scraping-with-apify), you'll find a quick guide on how to use IMDb Scraper to scrape data about The Queens's Gambit. If you still have questions on how to use the scraper, just email support@apify.com.
+
+## Cost of usage
+Note that it is much more efficient to run one longer scrape (at least one minute) than more shorter ones because of the startup time.
+
+Based on our experience, you can get **1,000 results for as little as $0.30** if you run the IMDb Scraper on
+the [Apify platform](https://apify.com).
+
+## Input
 
 | Field | Type | Description | Default value
 | ----- | ---- | ----------- | -------------|
-| startUrls | array | List of [Request](https://sdk.apify.com/docs/api/request#docsNav) objects that will be deeply crawled. The URL can be top level like `https://www.imdb.com/search/title/` or `https://www.imdb.com/find` or detail URL `https://www.imdb.com/title/tt7286456`. | `[{ "url": "https://www.imdb.com/search/title/" }]`|
+| startUrls | array | List of [request](https://sdk.apify.com/docs/api/request#docsNav) objects that will be deeply crawled. The URL can be top level such as `https://www.imdb.com/search/title/` or `https://www.imdb.com/find?q=bond` or a detail URL, such as `https://www.imdb.com/title/tt7286456`. | `[{ "url": "https://www.imdb.com/search/title/" }]`|
 | maxItems | number | Maximum number of actor pages that will be scraped | all found |
 | extendOutputFunction | string | Function that takes a Cheerio handle ($) as argument and returns data that will be merged with the result output. More information in [Extend output function](#extend-output-function) | |
-| proxyConfiguration | object | Proxy settings of the run. If you have access to Apify proxy, leave the default settings. If not, you can set `{ "useApifyProxy": false" }` to disable proxy usage | `{ "useApifyProxy": true }`|
+| proxyConfiguration | object | Proxy settings of the run. If you have access to Apify Proxy, leave the default settings. If not, you can set `{ "useApifyProxy": false" }` to disable proxy usage | `{ "useApifyProxy": true }`|
 
-### Output
+## Output
 
-Output is stored in a dataset. Each item is an information about a movies/TV show. Example:
+The IMDb Scraper output is stored in a dataset. Each item contains information about a movie, TV show, or other IMDb listing. For example:
 
 ```
 {
@@ -38,18 +48,13 @@ Output is stored in a dataset. Each item is an information about a movies/TV sho
 }
 ```
 
-### Compute units consumption
-Keep in mind that it is much more efficient to run one longer scrape (at least one minute) than more shorter ones because of the startup time.
-
-The average consumption is **1 Compute unit for 1000 actor pages** scraped
-
 ### Extend output function
 
-You can use this function to update the result output of this actor. This function gets a Cheerio handle `$` as an argument so you can choose what data from the page you want to scrape. The output from this will function will get merged with the result output.
+You can use this function to update the result output of this actor. This function gets a Cheerio handle `$` as an argument so you can choose what data from the page you want to scrape. The output from this function will get merged with the result output.
 
 The return value of this function has to be an object!
 
-You can return fields to achive 3 different things:
+You can return fields to achive three different things:
 - Add a new field - Return object with a field that is not in the result output
 - Change a field - Return an existing field with a new value
 - Remove a field - Return an existing field with a value `undefined`
@@ -64,7 +69,7 @@ You can return fields to achive 3 different things:
     }
 }
 ```
-This example will add a new field `story line`, change the `original title` field and remove `url` field
+This example will add a new field `story line`, change the `original title` field and remove the `url` field
 ```
 {
   "title": "Turandot (1981)",
@@ -83,5 +88,5 @@ This example will add a new field `story line`, change the `original title` fiel
 }
 ```
 
-### Epilogue
-Thank you for trying my actor. I will be very glad for a feedback that you can send to my email `dtrungtin@gmail.com`. If you find any bug, please create an issue on the [Github page](https://github.com/dtrungtin/actor-imdb-scraper).
+## Changelog
+IMDb Scraper is regularly updated, so please check the [changelog](https://github.com/dtrungtin/actor-imdb-scraper/blob/master/CHANGELOG.md) for fixes and improvements.

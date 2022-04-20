@@ -12,97 +12,31 @@ const isObject = val => typeof val === 'object' && val !== null && !Array.isArra
 
 function extractData(request, $) {
     if (request.userData.label === 'item') {
+        const scriptData = $('script[type="application/ld+json"]')[0];
+        const scriptText = scriptData.children[0].data.trim();
+        const { name, alternateName, aggregateRating: { ratingValue, ratingCount }, description, genre, actor, director } = JSON.parse(scriptText);
+
         const itemTitleParent = $('.titleParent a,[data-testid*=series-link]').text().trim();
         const isEpisode = itemTitleParent !== '';
         let itemTitle = isEpisode ? `${itemTitleParent} - ${$('h1').text().trim()}` : $('h1').text().trim();
-        let itemOriginalTitle = $('.title_wrapper .originalTitle').clone().children().remove()
-            .end()
-            .text()
-            .trim();
-        if (itemOriginalTitle === '') {
-            itemOriginalTitle = $('div[class*=OriginalTitleText]').text().replace('Original title:', '').trim();
-        }
-        let itemRuntime = $('h4:contains(Runtime:)').parent().text()
-            .replace('Runtime:', '')
-            .split('min')[0].trim();
+        const itemOriginalTitle = alternateName ? name : null;
 
-        if (itemRuntime === '') {
-            itemRuntime = $('span:contains(Runtime)').parent().text()
-                .replace('Runtime', '');
-            const parts = itemRuntime.match(/(\d+)h\s*(\d+)min/);
-            if (parts) {
-                const minuteTotal = parseInt(parts[1], 10) * 60 + parseInt(parts[2], 10);
-                itemRuntime = `${minuteTotal}`;
-            } else {
-                itemRuntime = itemRuntime.split('min')[0].trim();
-            }
+        let itemRuntime = $('[data-testid*=runtime] .ipc-metadata-list-item__content-container').text().trim();
+        let parts = itemRuntime.match(/(\d+)\s*hours*\s*(\d+)\s*minutes*/);
+        if (parts) {
+            const minuteTotal = parseInt(parts[1], 10) * 60 + parseInt(parts[2], 10);
+            itemRuntime = minuteTotal;
+        } else {
+            itemRuntime = parseInt(itemRuntime.split('minutes')[0].trim(), 10);
         }
+
         const yearMatch = itemTitle.match(/[(](\d{4})[)]/);
-        let parts = $('[href*=releaseinfo]').text().match(/\d{4}/);
+        parts = $('[href*=releaseinfo]').text().match(/\d{4}/);
         const itemYear = yearMatch ? yearMatch[1] : (parts ? parts[0] : '');
-        if (!yearMatch && itemYear !== '') {
+        if (!yearMatch && itemYear) {
             itemTitle = `${itemTitle} (${itemYear})`;
         }
 
-        const itemRating = $('.ratingValue,span[class*=RatingScore]').eq(0).text().trim()
-            .split('/')[0];
-        const itemRatingCount = $('span[itemprop=ratingCount],div[class*=TotalRatingAmount]').eq(0).text().trim()
-            .split(',')
-            .join('');
-        let desc = $('.summary_text').clone().children().remove()
-            .end()
-            .text()
-            .trim()
-            .replace('»', '')
-            .trim();
-        if (desc.endsWith('...')) {
-            desc = $('#titleStoryLine h2:contains(Storyline)').next().text().trim();
-        }
-        if (desc === '') {
-            desc = $('[data-testid=plot] span').eq(0).text().trim();
-        }
-        let itemStars = $('h4:contains(Star:),h4:contains(Stars:)').parent().text()
-            .replace('Star:', '')
-            .replace('Stars:', '')
-            .trim()
-            .split('|')[0].trim();
-        if (itemStars === '') {
-            for (let index = 0; index < $('a:contains(Star)').eq(0).parent().find('li').length; index++) {
-                // eslint-disable-next-line newline-per-chained-call
-                const star = $('a:contains(Star)').parent().find('li').eq(index).text();
-                if (index > 0) {
-                    itemStars += ', ';
-                }
-                itemStars += star;
-            }
-        }
-
-        let itemDirector = $('h4:contains(Director:),h4:contains(Directors:)').parent().text()
-            .replace('Director:', '')
-            .replace('Directors:', '')
-            .trim();
-        if (itemDirector === '') {
-            for (let index = 0; index < $('span:contains(Director)').eq(0).parent().find('li').length; index++) {
-                // eslint-disable-next-line newline-per-chained-call
-                const director = $('span:contains(Director)').parent().find('li').eq(index).text();
-                if (index > 0) {
-                    itemDirector += ', ';
-                }
-                itemDirector += director;
-            }
-        }
-        let itemGenres = toArrayString($('h4:contains(Genres:)').parent().text()
-            .replace('Genres:', '')
-            .trim());
-        if (itemGenres === '') {
-            for (let index = 0; index < $('[data-testid="storyline-genres"] li').length; index++) {
-                const genre = $('[data-testid="storyline-genres"] li').eq(index).text();
-                if (index > 0) {
-                    itemGenres += ', ';
-                }
-                itemGenres += genre;
-            }
-        }
         let itemCountry = toArrayString($('h4:contains(Country)').parent().text()
             .replace('Country:', '')
             .trim());
@@ -131,13 +65,13 @@ function extractData(request, $) {
             isEpisode,
             runtime: itemRuntime,
             certificate: (itemCert !== '' && !itemCert.includes('See all')) ? itemCert : request.userData.certificates,
-            year: itemYear,
-            rating: itemRating,
-            ratingcount: itemRatingCount,
-            description: desc,
-            stars: itemStars,
-            director: itemDirector,
-            genre: itemGenres,
+            year: itemYear ? parseInt(itemYear, 10) : null,
+            rating: ratingValue,
+            ratingcount: ratingCount,
+            description,
+            stars: actor.map(x => x.name).join(', '),
+            director: director ? director.map(x => x.name).join(', ') : null,
+            genre: genre.join(', '),
             country: itemCountry,
             url: request.url,
             '#debug': Apify.utils.createRequestDebugInfo(request),

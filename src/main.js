@@ -14,7 +14,7 @@ function extractData(request, $) {
     if (request.userData.label === 'item') {
         const scriptData = $('script[type="application/ld+json"]')[0];
         const scriptText = scriptData.children[0].data.trim();
-        const { name, alternateName, aggregateRating: { ratingValue, ratingCount }, description, genre, actor, director } = JSON.parse(scriptText);
+        const { name, alternateName, aggregateRating, description, genre, actor, director } = JSON.parse(scriptText);
 
         const itemTitleParent = $('.titleParent a,[data-testid*=series-link]').text().trim();
         const isEpisode = itemTitleParent !== '';
@@ -66,8 +66,8 @@ function extractData(request, $) {
             runtime: itemRuntime,
             certificate: (itemCert !== '' && !itemCert.includes('See all')) ? itemCert : request.userData.certificates,
             year: itemYear ? parseInt(itemYear, 10) : null,
-            rating: ratingValue,
-            ratingcount: ratingCount,
+            rating: aggregateRating ? aggregateRating.ratingValue : null,
+            ratingcount: aggregateRating ? aggregateRating.ratingCount : null,
             description,
             stars: actor ? actor.map(x => x.name).join(', ') : null,
             director: director ? director.map(x => x.name).join(', ') : null,

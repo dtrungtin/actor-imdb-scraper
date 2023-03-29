@@ -159,7 +159,7 @@ Apify.main(async () => {
                 if (!rq.wasAlreadyPresent) {
                     detailsEnqueued++;
                 }
-            } else if (startUrl.includes('/find?')) {
+            } else if (startUrl.includes('/find/?')) {
                 await requestQueue.addRequest({ url: startUrl, userData: { label: 'find' } });
             } else {
                 await requestQueue.addRequest({ url: startUrl, userData: { label: 'start' } });
@@ -184,7 +184,7 @@ Apify.main(async () => {
             log.info(`open url(${request.userData.label}): ${request.url}`);
 
             if (request.userData.label === 'find') {
-                const items = $('.findSection:nth-child(3) .findList .findResult');
+                const items = $('.find-title-result');
                 log.info(items.length);
 
                 for (let index = 0; index < items.length; index++) {
@@ -192,7 +192,7 @@ Apify.main(async () => {
                         return;
                     }
 
-                    const links = items.eq(index).find('.result_text a[href*="/title/"]');
+                    const links = items.eq(index).find('a[href*="/title/"]');
                     const isEpisode = links.length > 1;
                     const itemLink = links.eq(0);
                     const href = itemLink.attr('href');

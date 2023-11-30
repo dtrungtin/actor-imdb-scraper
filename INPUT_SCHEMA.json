@@ -10,6 +10,9 @@
             "description": "List of URLs that will be scraped or crawled. Go to https://www.imdb.com/search/title/ and choose filter you want.",
             "prefill": [
                 { "url": "https://www.imdb.com/find/?q=game&ref_=nv_sr_sm" }
+            ],
+            "default": [
+                { "url": "https://www.imdb.com/find/?q=game&ref_=nv_sr_sm" }
             ]
         },
         "maxItems": {

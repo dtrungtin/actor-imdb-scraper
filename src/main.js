@@ -208,14 +208,15 @@ Apify.main(async () => {
                     }
                 }
             } else if (request.userData.label === 'start') {
-                const paginationEle = $('.desc span');
+                const paginationEle = $('.ipc-page-grid__item--span-2 > .ipc-page-grid__item--span-2 > div');
                 if (!paginationEle || paginationEle.text() === '') {
                     return;
                 }
 
-                log.info(paginationEle.eq(0).text());
+                const paginationText = paginationEle.eq(0).clone().children().remove().end().text();
+                log.info(paginationText);
 
-                const items = $('.lister-list .lister-item');
+                const items = $('.ipc-metadata-list-summary-item');
                 log.info(items.length);
 
                 for (let index = 0; index < items.length; index++) {
@@ -223,7 +224,7 @@ Apify.main(async () => {
                         return;
                     }
 
-                    const links = items.eq(index).find('.lister-item-header a[href*="/title/"]');
+                    const links = items.eq(index).find('.ipc-title a[href*="/title/"]');
                     const isEpisode = links.length > 1;
                     const itemLink = isEpisode ? links.eq(1) : links.eq(0);
                     const href = itemLink.attr('href');
@@ -239,7 +240,7 @@ Apify.main(async () => {
                     }
                 }
 
-                if (paginationEle.eq(0).text().includes('of')) {
+                if (paginationText.includes('of')) {
                     const content = paginationEle.text().match(/of\s+(\d+[.,]?\d*[.,]?\d*)/)[1];
                     const pageCount = Math.floor(parseInt(content.replace(/,/g, ''), 10) / 50); // Each page has 50 items
 
@@ -252,10 +253,11 @@ Apify.main(async () => {
                     }
                 }
             } else if (request.userData.label === 'list') {
-                const paginationEle = $('.desc span');
-                log.info(paginationEle.eq(0).text());
+                const paginationEle = $('.ipc-page-grid__item--span-2 > .ipc-page-grid__item--span-2 > div');
+                const paginationText = paginationEle.eq(0).clone().children().remove().end().text();
+                log.info(paginationText);
 
-                const items = $('.lister-list .lister-item');
+                const items = $('.ipc-metadata-list-summary-item');
                 log.info(items.length);
 
                 for (let index = 0; index < items.length; index++) {
@@ -263,7 +265,7 @@ Apify.main(async () => {
                         return;
                     }
 
-                    const links = items.eq(index).find('.lister-item-header a[href*="/title/"]');
+                    const links = items.eq(index).find('.ipc-title a[href*="/title/"]');
                     const isEpisode = links.length > 1;
                     const itemLink = isEpisode ? links.eq(1) : links.eq(0);
                     const href = itemLink.attr('href');

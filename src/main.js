@@ -79,7 +79,7 @@ function extractData(request, $) {
     }
 
     if (request.userData.label === 'parentalguide') {
-        const itemList = $('#certificates .ipl-inline-list__item a');
+		const itemList = $('#certificates .ipl-inline-list__item a, [data-testid=certificates] ul li[data-testid=certificates-item] > span');
         const certificates = [];
         for (let index = 0; index < itemList.length; index++) {
             const $item = $(itemList[index]);
@@ -159,7 +159,7 @@ Apify.main(async () => {
                 if (!rq.wasAlreadyPresent) {
                     detailsEnqueued++;
                 }
-            } else if (startUrl.includes('/find/?')) {
+            } else if (startUrl.includes('/find/?') || startUrl.includes('/find?')) {
                 await requestQueue.addRequest({ url: startUrl, userData: { label: 'find' } });
             } else {
                 await requestQueue.addRequest({ url: startUrl, userData: { label: 'start' } });
@@ -184,7 +184,7 @@ Apify.main(async () => {
             log.info(`open url(${request.userData.label}): ${request.url}`);
 
             if (request.userData.label === 'find') {
-                const items = $('.find-title-result');
+                const items = $('.find-title-result, [data-testid="find-results-section-title"] ul li');
                 log.info(items.length);
 
                 for (let index = 0; index < items.length; index++) {

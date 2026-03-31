@@ -1,7 +1,7 @@
 ## Features
 Our free IMDb Scraper enables you to extract and download data about movies, video games, TV shows, streaming content, and personalities from [IMDb.com](https://www.imdb.com/).
 
-## Why scrape IMDb?
+## Why scrape IMDb with our unofficial API?
 Launched over 30 years ago, IMDb now contains over 8 million titles and over 10 million personalities. It is the most comprehensive film and TV show database in the world.
 
 IMDb datasets are frequently used to train AI models and recommendation systems and several different datasets are freely available to [download](https://www.imdb.com/interfaces/). You should also check out the [IMDb developer page](https://developer.imdb.com/) if you're interested in accessing data products direct from IMDb.
